@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Nile University — Interactive Map</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    :root {
+      --bg: #0f1724;
+      --panel: #0b1220;
+      --accent: #00aaff;
+      --muted: #94a3b8;
+      --card: rgba(255,255,255,0.04);
+    }
+    html,body { height:100%; margin:0; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:var(--bg); color:#e6eef8; }
+    .app { display:flex; height:100vh; overflow:hidden; }
+    
+    .sidebar { width:360px; max-width:92vw; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-right:1px solid rgba(255,255,255,0.04); box-shadow: 8px 0 24px rgba(2,6,23,0.6); padding:16px; box-sizing:border-box; display:flex; flex-direction:column; gap:12px; overflow-y:auto; }
+    .sidebar.collapsed { width:56px; padding:10px; }
+    .brand { display:flex; gap:12px; align-items:center; }
+    .logo { width:38px; height:38px; border-radius:8px; background:linear-gradient(45deg,var(--accent),#0066cc); display:inline-block; }
+    h1 { font-size:16px; margin:0; line-height:1; }
+    p.lead { margin:0; color:var(--muted); font-size:13px; }
+    .controls { display:flex; gap:8px; align-items:center; }
+    input[type="search"] { flex:1; padding:8px 10px; background:transparent; border:1px solid rgba(255,255,255,0.06); color:inherit; border-radius:8px; min-width:0; }
+    input[type="file"] { padding:8px; background:transparent; border:1px solid rgba(255,255,255,0.06); color:inherit; border-radius:8px; font-size:12px; }
+    button { background:transparent; color:var(--accent); border:1px solid rgba(255,255,255,0.04); padding:8px 10px; border-radius:8px; cursor:pointer; }
+    button:hover { background:rgba(255,255,255,0.02); }
+    .icon-btn { width:40px; height:40px; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; background:transparent; border:1px solid rgba(255,255,255,0.03); color:var(--muted); }
+    .list { overflow:auto; padding:4px; margin-top:6px; display:flex; flex-direction:column; gap:8px; }
+    .poi { background:var(--card); padding:10px; border-radius:8px; cursor:pointer; border:1px solid rgba(255,255,255,0.02); }
+    .poi:hover { background:rgba(255,255,255,0.06); }
+    .poi .title { font-weight:600; color:#eaf6ff; }
+    .poi .meta { font-size:13px; color:var(--muted); margin-top:6px; }
+    
+    .map-wrap { flex:1; position:relative; }
+    #map { position:absolute; inset:0; }
+    .map-controls { position:absolute; right:12px; top:12px; display:flex; flex-direction:column; gap:8px; z-index:400; }
+    .map-controls .btn { background:rgba(0,0,0,0.7); color:#fff; padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.04); cursor:pointer; }
+    .map-controls .btn:hover { background:rgba(0,0,0,0.85); }
+    
+    .floor-selector { display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
+    .floor-chip {
+      display:inline-flex;
+      height:36px;
+      min-width:36px;
+      align-items:center;
+      justify-content:center;
+      border-radius:8px;
+      background:#ffffff;
+      color:#0b1220;
+      font-weight:700;
+      cursor:pointer;
+      padding:0 12px;
+      box-shadow: 0 1px 6px 3px rgba(0,0,0,0.25);
+      transition: all .12s ease;
+      user-select:none;
+    }
+    .floor-chip:hover { color:var(--accent); transform: translateY(-1px); }
+    .floor-chip.active {
+      background: linear-gradient(180deg,#00aaff,#0088cc);
+      color: #ffffff;
+      box-shadow: 0 6px 14px rgba(0,170,255,0.4);
+    }
+    
+    .status { font-size:12px; color:var(--muted); margin:8px 0; }
+    .status.success { color:#4ade80; }
+    .status.error { color:#f87171; }
+    
+    .leaflet-popup-content-wrapper { background:#061126; color:#e6eef8; border-radius:8px; border:1px solid rgba(255,255,255,0.04); }
+    .leaflet-popup-tip { background:#061126; }
+    
+    @media (max-width:640px) {
+      .sidebar { position:absolute; z-index:210; left:12px; top:12px; bottom:12px; width:90%; max-width:360px; border-radius:12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="logo" title="Nile University"></div>
+        <div style="flex:1; min-width:0;">
+          <h1>Nile University</h1>
+          <p class="lead">Campus map — buildings, rooms & services</p>
+        </div>
+        <button id="toggleSidebar" class="icon-btn" title="Toggle sidebar">☰</button>
+      </div>
+
+      <div class="floor-selector">
+        <button class="floor-chip" data-floor="B">B</button>
+        <button class="floor-chip" data-floor="G">G</button>
+        <button class="floor-chip" data-floor="1" style="display:none;">1</button>
+        <button class="floor-chip" data-floor="2" style="display:none;">2</button>
+        <button class="floor-chip" data-floor="F" style="display:none;">F</button>
+        <button class="floor-chip" data-floor="S" style="display:none;">S</button>
+      </div>
+
+      <div id="uploadStatus" class="status"></div>
+
+      <div class="controls">
+        <input id="searchBox" type="search" placeholder="Search building or room..." />
+        <button id="searchBtn">Find</button>
+      </div>
+
+      <div style="display:flex; gap:8px;">
+        <button id="zoomAllBtn" class="icon-btn" title="Zoom to all">⤢</button>
+        <button id="locBtn" class="icon-btn" title="Show my location">📍</button>
+        <button id="resetBtn" class="icon-btn" title="Clear">✕</button>
+      </div>
+
+      <div style="flex:1; overflow:auto;">
+        <div style="font-size:13px; color:var(--muted); margin-top:8px;">Points of interest</div>
+        <div class="list" id="poiList"></div>
+      </div>
+
+      <div style="font-size:12px; color:var(--muted); margin-top:8px;">
+        Interactive campus map prototype
+      </div>
+    </aside>
+
+    <div class="map-wrap">
+      <div id="map"></div>
+      <div class="map-controls">
+        <button id="zoomIn" class="btn">＋</button>
+        <button id="zoomOut" class="btn">－</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    // Nile University location
+    const NILE_COORDS = [30.01114, 30.985985];
+    
+    // Initialize map
+    const map = L.map('map', { 
+      preferCanvas: true, 
+      zoomControl: false 
+    }).setView(NILE_COORDS, 17);
+
+    // Add MapTiler Hybrid tiles (satellite + labels)
+    L.tileLayer('https://api.maptiler.com/maps/hybrid/{z}/{x}/{y}.jpg?key=WoqEBNYjP1UoGCeDHFyh', {
+      attribution: '&copy; <a href="https://www.maptiler.com/">MapTiler</a> &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 20,
+      tileSize: 512,
+      zoomOffset: -1
+    }).addTo(map);
+
+    // Floor data storage
+    const floorLayers = {};
+    let activeFloor = null;
+    let activeBuilding = null;
+    let uploadedGeoJSON = null;
+
+    // Create a polygon from your coordinates
+    const floorBoundary = [
+      [30.012253, 30.985486],
+      [30.011455, 30.985846],
+      [30.011641, 30.986272],
+      [30.012407, 30.985915]
+    ];
+
+    // Add the floor boundary outline
+    const boundaryLayer = L.polygon(floorBoundary, {
+      color: '#00aaff',
+      weight: 2,
+      fillColor: '#00aaff',
+      fillOpacity: 0.1,
+      dashArray: '5, 5'
+    }).addTo(map);
+    boundaryLayer.bindPopup('<strong>Floor Boundary Area</strong><br>Upload your GeoJSON to see floor details');
+
+    // Sample POIs
+    const POIS = [
+      { 
+        id: 'main-building', 
+        name: 'Main Building', 
+        coords: [30.010650, 30.986840], 
+        floor: 'G',
+        floors: ['B', 'G', 'F', 'S'],
+        desc: 'Nile University Main Building'
+      },
+      { 
+        id: 'tarek-khalil', 
+        name: 'Tarek Khalil Building', 
+        coords: [30.011768, 30.985970], 
+        floor: 'G',
+        floors: ['B', 'G', '1', '2'],
+        desc: 'Tarek Khalil Building'
+      }
+    ];
+
+    const markerGroup = L.layerGroup().addTo(map);
+    const markersById = {};
+
+    // Add POI markers
+    function addPoisToMap(pois) {
+      markerGroup.clearLayers();
+      pois.forEach(p => {
+        const marker = L.marker([p.coords[0], p.coords[1]], { 
+          title: p.name 
+        });
+        const popupHtml = `
+          <div style="font-size:14px">
+            <strong>${p.name}</strong>
+            <div style="color:#9fb3cc;margin-top:6px">${p.desc || ''}</div>
+            ${p.floors ? `<div style="color:#64748b;margin-top:8px;font-size:12px">Available floors: ${p.floors.join(', ')}</div>` : ''}
+          </div>
+        `;
+        marker.bindPopup(popupHtml, { minWidth: 200 });
+        marker.on('click', () => {
+          activeBuilding = p.id;
+          updateFloorSelector(p.floors);
+        });
+        markersById[p.id] = marker;
+        marker.addTo(markerGroup);
+      });
+    }
+
+    // Build POI list
+    function buildPoiList(pois) {
+      const list = document.getElementById('poiList');
+      list.innerHTML = '';
+      pois.forEach(p => {
+        const el = document.createElement('div');
+        el.className = 'poi';
+        el.innerHTML = `
+          <div class="title">${p.name}</div>
+          ${p.floors ? `<div class="meta">Floors: ${p.floors.join(', ')}</div>` : ''}
+        `;
+        el.onclick = () => {
+          map.setView(p.coords, 19);
+          markersById[p.id].openPopup();
+          activeBuilding = p.id;
+          updateFloorSelector(p.floors);
+        };
+        list.appendChild(el);
+      });
+    }
+
+    // Update floor selector based on building
+    function updateFloorSelector(availableFloors) {
+      const floorButtons = document.querySelectorAll('.floor-chip');
+      
+      // Always show B and G buttons
+      floorButtons.forEach(btn => {
+        const floor = btn.getAttribute('data-floor');
+        
+        if (floor === 'B' || floor === 'G') {
+          // B and G are always visible
+          btn.style.display = 'inline-flex';
+          btn.disabled = false;
+        } else if (availableFloors && availableFloors.includes(floor)) {
+          // Show other floors only if they're in the building's floor list
+          btn.style.display = 'inline-flex';
+          btn.disabled = false;
+        } else {
+          // Hide floors not in the building's list
+          btn.style.display = 'none';
+        }
+        
+        btn.classList.remove('active');
+      });
+      
+      activeFloor = null;
+      // Hide all floor layers
+      Object.values(floorLayers).forEach(layer => map.removeLayer(layer));
+    }
+
+    addPoisToMap(POIS);
+    buildPoiList(POIS);
+
+    // Load GeoJSON from file in same folder
+    function loadFloorFromFile(floorId) {
+      if (!activeBuilding) return;
+      
+      const building = POIS.find(p => p.id === activeBuilding);
+      const buildingPrefix = activeBuilding;
+      const filename = `${buildingPrefix}-floor-${floorId}.geojson`;
+      const status = document.getElementById('uploadStatus');
+      
+      status.textContent = `Loading ${filename}...`;
+      status.className = 'status';
+      
+      fetch(filename)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`File not found: ${filename}`);
+          }
+          return response.json();
+        })
+        .then(geojson => {
+          loadGeoJSONLayer(geojson, `${buildingPrefix}-${floorId}`);
+          status.textContent = `✓ Loaded ${filename}`;
+          status.className = 'status success';
+          
+          // Fit map to the GeoJSON bounds
+          const layerKey = `${buildingPrefix}-${floorId}`;
+          if (floorLayers[layerKey]) {
+            const bounds = floorLayers[layerKey].getBounds();
+            map.fitBounds(bounds, { padding: [50, 50] });
+          }
+        })
+        .catch(err => {
+          status.textContent = `✗ ${err.message}`;
+          status.className = 'status error';
+          console.error('GeoJSON load error:', err);
+        });
+    }
+
+    // Load GeoJSON layer
+    function loadGeoJSONLayer(geojson, floorId) {
+      // Remove existing layer for this floor
+      if (floorLayers[floorId]) {
+        map.removeLayer(floorLayers[floorId]);
+      }
+
+      // Create new layer
+      const layer = L.geoJSON(geojson, {
+        style: (feature) => ({
+          color: '#00d1ff',
+          weight: 2,
+          fillColor: '#002a3a',
+          fillOpacity: 0.6
+        }),
+        onEachFeature: (feature, layer) => {
+          const props = feature.properties || {};
+          const name = props.name || props.title || 'Room';
+          const desc = props.desc || props.description || '';
+          const type = props.type || '';
+          
+          let html = `<strong>${name}</strong>`;
+          if (type) html += `<div style="color:#64748b;margin-top:4px;font-size:12px">${type}</div>`;
+          if (desc) html += `<div style="margin-top:6px;color:#9fb3cc">${desc}</div>`;
+          
+          layer.bindPopup(html, { minWidth: 180 });
+        }
+      });
+
+      floorLayers[floorId] = layer;
+      layer.addTo(map);
+      uploadedGeoJSON = geojson;
+    }
+
+    // Floor selector
+    document.querySelectorAll('.floor-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (!activeBuilding) {
+          alert('Please select a building first (Main Building or Tarek Khalil Building)');
+          return;
+        }
+        
+        const floor = btn.getAttribute('data-floor');
+        const building = POIS.find(p => p.id === activeBuilding);
+        
+        if (!building || !building.floors || !building.floors.includes(floor)) {
+          return;
+        }
+        
+        // Toggle active state
+        document.querySelectorAll('.floor-chip').forEach(b => b.classList.remove('active'));
+        
+        const layerKey = `${activeBuilding}-${floor}`;
+        
+        if (activeFloor === floor) {
+          activeFloor = null;
+          // Hide all floor layers
+          Object.values(floorLayers).forEach(layer => map.removeLayer(layer));
+        } else {
+          activeFloor = floor;
+          btn.classList.add('active');
+          
+          // Try to load floor from file if not already loaded
+          if (!floorLayers[layerKey]) {
+            loadFloorFromFile(floor);
+          } else {
+            // Hide all layers first
+            Object.values(floorLayers).forEach(layer => map.removeLayer(layer));
+            
+            // Show only active floor layer
+            if (!map.hasLayer(floorLayers[layerKey])) {
+              map.addLayer(floorLayers[layerKey]);
+            }
+            
+            // Fit to bounds
+            const bounds = floorLayers[layerKey].getBounds();
+            map.fitBounds(bounds, { padding: [50, 50] });
+          }
+        }
+      });
+    });
+
+    // Filter POIs by active floor
+    function filterPOIs() {
+      // This function is no longer needed since we're building-based now
+      // Keep it for compatibility but make it a no-op
+    }
+
+    // Map controls
+    document.getElementById('zoomIn').onclick = () => map.zoomIn();
+    document.getElementById('zoomOut').onclick = () => map.zoomOut();
+    document.getElementById('zoomAllBtn').onclick = () => map.fitBounds(boundaryLayer.getBounds());
+    document.getElementById('resetBtn').onclick = () => {
+      map.setView(NILE_COORDS, 17);
+      document.querySelectorAll('.floor-chip').forEach(b => {
+        b.classList.remove('active');
+        b.style.display = 'inline-flex';
+        b.disabled = false;
+      });
+      activeFloor = null;
+      activeBuilding = null;
+      Object.values(floorLayers).forEach(layer => map.removeLayer(layer));
+      addPoisToMap(POIS);
+      buildPoiList(POIS);
+      document.getElementById('uploadStatus').textContent = '';
+    };
+
+    // Location button
+    document.getElementById('locBtn').onclick = () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const latlng = [pos.coords.latitude, pos.coords.longitude];
+            map.setView(latlng, 18);
+            L.marker(latlng).addTo(map)
+              .bindPopup('Your location')
+              .openPopup();
+          },
+          () => alert('Unable to get your location')
+        );
+      }
+    };
+
+    // Search functionality
+    document.getElementById('searchBtn').onclick = () => {
+      const query = document.getElementById('searchBox').value.toLowerCase();
+      if (!query) return;
+      
+      const found = POIS.find(p => 
+        p.name.toLowerCase().includes(query) || 
+        (p.desc && p.desc.toLowerCase().includes(query))
+      );
+      
+      if (found) {
+        map.setView(found.coords, 19);
+        markersById[found.id].openPopup();
+      } else {
+        alert('Location not found');
+      }
+    };
+
+    // Sidebar toggle
+    document.getElementById('toggleSidebar').onclick = () => {
+      document.getElementById('sidebar').classList.toggle('collapsed');
+    };
+  </script>
+</body>
+</html>
