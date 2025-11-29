@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<!-- saved from url=(0092)file:///C:/Users/USER/AppData/Local/Microsoft/Windows/INetCache/IE/B0L3BWXS/NU%20map[1].html -->
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Nile University — Interactive Map</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="./Nile University — Interactive Map_files/leaflet.css">
+
+  <style>
+    :root {
+      --bg: #0f1724;
+      --panel: #0b1220;
+      --accent: #00aaff;
+      --muted: #94a3b8;
+      --card: rgba(255, 255, 255, 0.04);
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: var(--bg);
+      color: #e6eef8;
+    }
+
+    .app {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 360px;
+      max-width: 92vw;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+      border-right: 1px solid rgba(255, 255, 255, 0.04);
+      box-shadow: 8px 0 24px rgba(2, 6, 23, 0.6);
+      padding: 16px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+    }
+
+    .sidebar.collapsed {
+      width: 56px;
+      padding: 10px;
+    }
+
+    .brand {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .logo {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      background: linear-gradient(45deg, var(--accent), #0066cc);
+      display: inline-block;
+    }
+
+    h1 {
+      font-size: 16px;
+      margin: 0;
+      line-height: 1;
+    }
+
+    p.lead {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    input[type="search"] {
+      flex: 1;
+      padding: 8px 10px;
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: inherit;
+      border-radius: 8px;
+      min-width: 0;
+    }
+
+    input[type="file"] {
+      padding: 8px;
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: inherit;
+      border-radius: 8px;
+      font-size: 12px;
+    }
+
+    button {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      color: var(--muted);
+    }
+
+    .list {
+      overflow: auto;
+      padding: 4px;
+      margin-top: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .poi {
+      background: var(--card);
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.02);
+    }
+
+    .poi:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .poi .title {
+      font-weight: 600;
+      color: #eaf6ff;
+    }
+
+    .poi .meta {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    .map-wrap {
+      flex: 1;
+      position: relative;
+    }
+
+    #map {
+      position: absolute;
+      inset: 0;
+    }
+
+    .map-controls {
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 400;
+    }
+
+    .map-controls .btn {
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      cursor: pointer;
+    }
+
+    .map-controls .btn:hover {
+      background: rgba(0, 0, 0, 0.85);
+    }
+
+    .floor-selector {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .floor-chip {
+      display: inline-flex;
+      height: 36px;
+      min-width: 36px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #0b1220;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 0 12px;
+      box-shadow: 0 1px 6px 3px rgba(0, 0, 0, 0.25);
+      transition: all .12s ease;
+      user-select: none;
+    }
+
+    .floor-chip:hover {
+      color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    .floor-chip.active {
+      background: linear-gradient(180deg, #00aaff, #0088cc);
+      color: #ffffff;
+      box-shadow: 0 6px 14px rgba(0, 170, 255, 0.4);
+    }
+
+    .status {
+      font-size: 12px;
+      color: var(--muted);
+      margin: 8px 0;
+    }
+
+    .status.success {
+      color: #4ade80;
+    }
+
+    .status.error {
+      color: #f87171;
+    }
+
+    .leaflet-popup-content-wrapper {
+      background: #061126;
+      color: #e6eef8;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .leaflet-popup-tip {
+      background: #061126;
+    }
+
+    @media (max-width:640px) {
+      .sidebar {
+        position: absolute;
+        z-index: 210;
+        left: 12px;
+        top: 12px;
+        bottom: 12px;
+        width: 90%;
+        max-width: 360px;
+        border-radius: 12px;
+      }
+    }
+  </style>
+</head>
+
+<body class="">
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="logo" title="Nile University"></div>
+        <div style="flex:1; min-width:0;">
+          <h1>Nile University</h1>
+          <p class="lead">Campus map — buildings, rooms &amp; services</p>
+        </div>
+        <button id="toggleSidebar" class="icon-btn" title="Toggle sidebar">☰</button>
+      </div>
+
+      <div class="floor-selector">
+        <button class="floor-chip" data-floor="B" style="display: inline-flex;">B</button>
+        <button class="floor-chip" data-floor="G" style="display: inline-flex;">G</button>
+        <button class="floor-chip" data-floor="1" style="display: inline-flex;">1</button>
+        <button class="floor-chip" data-floor="2" style="display: inline-flex;">2</button>
+        <button class="floor-chip" data-floor="F" style="display: none;">F</button>
+        <button class="floor-chip" data-floor="S" style="display: none;">S</button>
+      </div>
+
+      <div id="uploadStatus" class="status"></div>
+
+      <div class="controls">
+        <input id="searchBox" type="search" placeholder="Search building or room...">
+        <button id="searchBtn">Find</button>
+      </div>
+
+      <div style="display:flex; gap:8px;">
+        <button id="zoomAllBtn" class="icon-btn" title="Zoom to all">⤢</button>
+        <button id="locBtn" class="icon-btn" title="Show my location">📍</button>
+        <button id="resetBtn" class="icon-btn" title="Clear">✕</button>
+      </div>
+
+      <div style="flex:1; overflow:auto;">
+        <div style="font-size:13px; color:var(--muted); margin-top:8px;">Points of interest</div>
+        <div class="list" id="poiList">
+          <div class="poi">
+            <div class="title">Main Building</div>
+            <div class="meta">Floors: B, G, F, S</div>
+          </div>
+          <div class="poi">
+            <div class="title">Tarek Khalil Building</div>
+            <div class="meta">Floors: B, G, 1, 2</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="font-size:12px; color:var(--muted); margin-top:8px;">
+        Interactive campus map prototype
+      </div>
+    </aside>
+
+    <div class="map-wrap">
+      <div id="map"></div>
+
+      <div class="map-controls">
+        <button id="zoomIn" class="btn">＋</button>
+        <button id="zoomOut" class="btn">－</button>
+      </div>
+    </div>
+
+    <div class="leaflet-pane leaflet-overlay-pane"><canvas class="leaflet-zoom-animated" width="2708" height="1886"
+        style="transform: translate3d(-223px, -473px, 0px); width: 1354px; height: 943px;"></canvas>
+    </div>
+    <div class="leaflet-pane leaflet-shadow-pane"><img src="./Nile University — Interactive Map_files/marker-shadow.png"
+        class="leaflet-marker-shadow leaflet-zoom-animated" alt=""
+        style="margin-left: -12px; margin-top: -41px; width: 41px; height: 41px; transform: translate3d(563px, 394px, 0px);"><img
+        src="./Nile University — Interactive Map_files/marker-shadow.png"
+        class="leaflet-marker-shadow leaflet-zoom-animated" alt=""
+        style="margin-left: -12px; margin-top: -41px; width: 41px; height: 41px; transform: translate3d(239px, -87px, 0px);">
+    </div>
+    <div class="leaflet-pane leaflet-marker-pane"><img
+        src="./Nile University — Interactive Map_files/marker-icon-2x.png"
+        class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" title="Main Building" alt="Marker"
+        tabindex="0" role="button"
+        style="margin-left: -12px; margin-top: -41px; width: 25px; height: 41px; transform: translate3d(563px, 394px, 0px); z-index: 394;"><img
+        src="./Nile University — Interactive Map_files/marker-icon-2x.png"
+        class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" title="Tarek Khalil Building" alt="Marker"
+        tabindex="0" role="button"
+        style="margin-left: -12px; margin-top: -41px; width: 25px; height: 41px; transform: translate3d(239px, -87px, 0px); z-index: -87;">
+    </div>
+    <div class="leaflet-pane leaflet-tooltip-pane"></div>
+    <div class="leaflet-pane leaflet-popup-pane"></div>
+    <div class="leaflet-proxy leaflet-zoom-animated"
+      style="transform: translate3d(7.86615e+07px, 5.53699e+07px, 0px) scale(262144);"></div>
+  </div>
+  <div class="leaflet-control-container">
+    <div class="leaflet-top leaflet-left"></div>
+    <div class="leaflet-top leaflet-right"></div>
+    <div class="leaflet-bottom leaflet-left"></div>
+    <div class="leaflet-bottom leaflet-right">
+      <div class="leaflet-control-attribution leaflet-control"><a href="https://leafletjs.com/"
+          title="A JavaScript library for interactive maps"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+            width="12" height="8" viewBox="0 0 12 8" class="leaflet-attribution-flag">
+            <path fill="#4C7BE1" d="M0 0h12v4H0z"></path>
+            <path fill="#FFD500" d="M0 4h12v3H0z"></path>
+            <path fill="#E0BC00" d="M0 7h12v1H0z"></path>
+          </svg> Leaflet</a> <span aria-hidden="true">|</span> © <a href="https://www.maptiler.com/">MapTiler</a>
+        © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a></div>
+    </div>
+  </div>
+  </div>
+  <div class="map-controls">
+    <button id="zoomIn" class="btn">＋</button>
+    <button id="zoomOut" class="btn">－</button>
+  </div>
+  </div>
+  </div>
+
+  <script src="./Nile University — Interactive Map_files/leaflet.js.download"></script>
+
+  <script>
+    <script src="./Nile University — Interactive Map_files/leaflet.js.download"></script>
+
+  <script>
+  // Instead of real-world coords, use a simple image coordinate system
+      const IMAGE_BOUNDS = [[0, 0], [1000, 1000]];   // top-left and bottom-right in "image units"
+
+      // Initialize map on the 'map' div, no zoom control, no scroll or drag
+      const map = L.map('map', {
+        crs: L.CRS.Simple,          // treat it as a flat image, not Earth
+      zoomControl: false,
+      dragging: false,
+      scrollWheelZoom: false,
+      doubleClickZoom: false,
+      boxZoom: false,
+      keyboard: false
+  });
+
+      // Add your floor image as the only layer
+      const imageUrl = 'floor-1.png';   // your PNG file
+      const floorImage = L.imageOverlay(imageUrl, IMAGE_BOUNDS).addTo(map);
+      map.fitBounds(IMAGE_BOUNDS);      // center and fit to the image
+
+      // ---------- FROM HERE DOWN your old logic can mostly stay ----------
+
+      // Dummy "campus" coord (no longer used for view, but kept if any code needs it)
+      const NILE_COORDS = [30.01114, 30.985985];
+
+      // Floor data storage
+      const floorLayers = { };
+      let activeFloor = null;
+      let activeBuilding = null;
+      let uploadedGeoJSON = null;
+
+      // Sample POIs – use image coords now (adjust to your image)
+      const POIS = [
+      {
+        id: 'main-building',
+      name: 'Main Building',
+      coords: [200, 300],      // <--- pick positions on your image
+      floor: 'G',
+      floors: ['B', 'G', 'F', 'S'],
+      desc: 'Nile University Main Building'
+    },
+      {
+        id: 'tarek-khalil',
+      name: 'Tarek Khalil Building',
+      coords: [600, 500],      // <--- pick positions on your image
+      floor: 'G',
+      floors: ['B', 'G', '1', '2'],
+      desc: 'Tarek Khalil Building'
+    }
+      ];
+
+      const markerGroup = L.layerGroup().addTo(map);
+      const markersById = { };
+
+      function addPoisToMap(pois) {
+        markerGroup.clearLayers();
+    pois.forEach(p => {
+      const marker = L.marker(p.coords, {title: p.name });
+      const popupHtml = `
+      <div style="font-size:14px">
+        <strong>${p.name}</strong>
+        <div style="color:#9fb3cc;margin-top:6px">${p.desc || ''}</div>
+        ${p.floors ? `<div style="color:#64748b;margin-top:8px;font-size:12px">Available floors: ${p.floors.join(', ')}</div>` : ''}
+      </div>
+      `;
+      marker.bindPopup(popupHtml, {minWidth: 200 });
+      marker.on('click', () => {
+        activeBuilding = p.id;
+      updateFloorSelector(p.floors);
+      });
+      markersById[p.id] = marker;
+      marker.addTo(markerGroup);
+    });
+  }
+
+      function buildPoiList(pois) {
+    const list = document.getElementById('poiList');
+      list.innerHTML = '';
+    pois.forEach(p => {
+      const el = document.createElement('div');
+      el.className = 'poi';
+      el.innerHTML = `
+      <div class="title">${p.name}</div>
+      ${p.floors ? `<div class="meta">Floors: ${p.floors.join(', ')}</div>` : ''}
+      `;
+      el.onclick = () => {
+        map.setView(p.coords, map.getZoom());
+      markersById[p.id].openPopup();
+      activeBuilding = p.id;
+      updateFloorSelector(p.floors);
+      };
+      list.appendChild(el);
+    });
+  }
+
+      function updateFloorSelector(availableFloors) {
+    const floorButtons = document.querySelectorAll('.floor-chip');
+    floorButtons.forEach(btn => {
+      const floor = btn.getAttribute('data-floor');
+      if (floor === 'B' || floor === 'G') {
+        btn.style.display = 'inline-flex';
+      btn.disabled = false;
+      } else if (availableFloors && availableFloors.includes(floor)) {
+        btn.style.display = 'inline-flex';
+      btn.disabled = false;
+      } else {
+        btn.style.display = 'none';
+      }
+      btn.classList.remove('active');
+    });
+      activeFloor = null;
+    Object.values(floorLayers).forEach(layer => map.removeLayer(layer));
+  }
+
+      addPoisToMap(POIS);
+      buildPoiList(POIS);
+
+      function loadFloorFromFile(floorId) {
+    if (!activeBuilding) return;
+    const building = POIS.find(p => p.id === activeBuilding);
+      const buildingPrefix = activeBuilding;
+      const filename = `${buildingPrefix}-floor-${floorId}.geojson`;
+      const status = document.getElementById('uploadStatus');
+      status.textContent = `Loading ${filename}...`;
+      status.className = 'status';
+      fetch(filename)
+      .then(response => {
+        if (!response.ok) throw new Error(`File not found: ${filename}`);
+      return response.json();
+      })
+      .then(geojson => {
+        loadGeoJSONLayer(geojson, `${buildingPrefix}-${floorId}`);
+      status.textContent = `✓ Loaded ${filename}`;
+      status.className = 'status success';
+      const layerKey = `${buildingPrefix}-${floorId}`;
+      if (floorLayers[layerKey]) {
+          const bounds = floorLayers[layerKey].getBounds();
+      map.fitBounds(bounds, {padding: [50, 50] });
+        }
+      })
+      .catch(err => {
+        status.textContent = `✗ ${err.message}`;
+      status.className = 'status error';
+      console.error('GeoJSON load error:', err);
+      });
+  }
+
+      function loadGeoJSONLayer(geojson, floorId) {
+    if (floorLayers[floorId]) map.removeLayer(floorLayers[floorId]);
+      const layer = L.geoJSON(geojson, {
+        style: () => ({
+        color: '#00d1ff',
+      weight: 2,
+      fillColor: '#002a3a',
+      fillOpacity: 0.6
+      }),
+      onEachFeature: (feature, layer) => {
+        const props = feature.properties || { };
+      const name = props.name || props.title || 'Room';
+      const desc = props.desc || props.description || '';
+      const type = props.type || '';
+      let html = `<strong>${name}</strong>`;
+      if (type) html += `<div style="color:#64748b;margin-top:4px;font-size:12px">${type}</div>`;
+      if (desc) html += `<div style="margin-top:6px;color:#9fb3cc">${desc}</div>`;
+      layer.bindPopup(html, {minWidth: 180 });
+      }
+    });
+      floorLayers[floorId] = layer;
+      layer.addTo(map);
+      uploadedGeoJSON = geojson;
+  }
+
+  document.querySelectorAll('.floor-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (!activeBuilding) {
+            alert('Please select a building first (Main Building or Tarek Khalil Building)');
+            return;
+          }
+          const floor = btn.getAttribute('data-floor');
+          const building = POIS.find(p => p.id === activeBuilding);
+          if (!building || !building.floors || !building.floors.includes(floor)) return;
+          document.querySelectorAll('.floor-chip').forEach(b => b.classList.remove('active'));
+          const layerKey = `${activeBuilding}-${floor}`;
+          if (activeFloor === floor) {
+            activeFloor = null;
+            Object.values(floorLayers).forEach(layer => map.removeLayer(layer));
+          } else {
+            activeFloor = floor;
+            btn.classList.add('active');
+            if (!floorLayers[layerKey]) {
+              loadFloorFromFile(floor);
+            } else {
+              Object.values(floorLayers).forEach(layer => map.removeLayer(layer));
+              if (!map.hasLayer(floorLayers[layerKey])) {
+                map.addLayer(floorLayers[layerKey]);
+              }
+              const bounds = floorLayers[layerKey].getBounds();
+              map.fitBounds(bounds, { padding: [50, 50] });
+            }
+          }
+        });
+  });
+
+  // Map controls (zoom buttons still work but on image)
+  document.getElementById('zoomIn').onclick = () => map.zoomIn();
+  document.getElementById('zoomOut').onclick = () => map.zoomOut();
+  document.getElementById('zoomAllBtn').onclick = () => map.fitBounds(IMAGE_BOUNDS);
+  document.getElementById('resetBtn').onclick = () => {
+        map.fitBounds(IMAGE_BOUNDS);
+    document.querySelectorAll('.floor-chip').forEach(b => {
+        b.classList.remove('active');
+      b.style.display = 'inline-flex';
+      b.disabled = false;
+    });
+      activeFloor = null;
+      activeBuilding = null;
+    Object.values(floorLayers).forEach(layer => map.removeLayer(layer));
+      addPoisToMap(POIS);
+      buildPoiList(POIS);
+      document.getElementById('uploadStatus').textContent = '';
+  };
+
+  // Location button is now meaningless on an image; you can disable it if you want
+  document.getElementById('locBtn').onclick = () => {
+        alert('Location not available on static floor image.');
+  };
+
+  document.getElementById('searchBtn').onclick = () => {
+    const query = document.getElementById('searchBox').value.toLowerCase();
+      if (!query) return;
+    const found = POIS.find(p =>
+      p.name.toLowerCase().includes(query) ||
+      (p.desc && p.desc.toLowerCase().includes(query))
+      );
+      if (found) {
+        map.setView(found.coords, map.getZoom());
+      markersById[found.id].openPopup();
+    } else {
+        alert('Location not found');
+    }
+  };
+
+  document.getElementById('toggleSidebar').onclick = () => {
+        document.getElementById('sidebar').classList.toggle('collapsed');
+  };
+  </script>
+
+  </script>
+
+</body>
+
+</html>
