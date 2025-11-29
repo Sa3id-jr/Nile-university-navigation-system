@@ -4,11 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nile University - Interactive Campus Map</title>
-
-  <!-- Leaflet CSS -->
+  <title>Nile University - Campus Navigation</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
   <style>
     * {
       margin: 0;
@@ -90,10 +87,6 @@
       background: #2563eb;
       transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-    }
-
-    .building-btn:active {
-      transform: translateY(0);
     }
 
     .building-btn .floor-info {
@@ -192,6 +185,7 @@
     #map {
       flex: 1;
       position: relative;
+      background: #f0f0f0;
     }
 
     .map-footer {
@@ -200,26 +194,6 @@
       font-size: 11px;
       color: #64748b;
       text-align: center;
-    }
-
-    .leaflet-bar {
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-      border-radius: 8px;
-    }
-
-    .leaflet-bar a {
-      width: 34px;
-      height: 34px;
-      line-height: 34px;
-      transition: all 0.15s ease;
-    }
-
-    .leaflet-bar a:hover {
-      background-color: #f0f4ff;
-    }
-
-    .leaflet-bar a:active {
-      transform: scale(0.96);
     }
   </style>
 </head>
@@ -252,69 +226,86 @@
 
         <div class="control-buttons">
           <button class="control-btn" id="reset-btn" title="Reset view">↺</button>
-          <button class="control-btn" id="pin-btn" title="Drop pin">📍</button>
-          <button class="control-btn" id="clear-btn" title="Clear selection">✕</button>
+          <button class="control-btn" id="clear-btn" title="Clear">✕</button>
         </div>
       </div>
 
-      <div class="map-footer">
-        Interactive campus map prototype
-      </div>
+      <div class="map-footer">Interactive campus map prototype</div>
     </div>
 
     <div id="map"></div>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
   <script>
-    const map = L.map('map', {
-      crs: L.CRS.Simple,
-      minZoom: -2,
-      maxZoom: 2,
-      zoomControl: true
-    });
+    const map = L.map('map', { crs: L.CRS.Simple, minZoom: -1, maxZoom: 3 });
 
-    const floorConfig = {
-      imageUrl: 'floor-1.png',
-      bounds: [[0, 0], [1000, 1500]]
+    const img_width = 1482;
+    const img_height = 1049;
+    const bounds = [[0, 0], [img_height, img_width]];
+
+    L.imageOverlay('floor-1.png', bounds).addTo(map);
+    map.fitBounds(bounds);
+
+    // Room coordinates with your exact measurements
+    const rooms = {
+      'Library': [878, 566],
+      'Men Bathroom': [780, 446],
+      'Room 1': [778, 588],
+      'IT Service Room': [710, 444],
+      '68B': [706, 588],
+      'Quick': [518, 362],
+      'Elevators': [414, 446],
+      'Women Bathroom': [322, 446],
+      'Room 7': [250, 446],
+      'Room 8': [177, 446],
+      'IT Service Room 2': [175, 592],
+      'Room 50': [254, 588],
+      'Room 51': [324, 590],
+      'Room 52A': [444, 688],
+      'Room 52B': [444, 760],
+      'Room 53': [444, 818],
+      'Stairs': [590, 622],
+      'SU': [590, 682],
+      'HUAC Lab': [590, 744],
+      'B43 Civil Lab': [590, 818],
+      'Men Bathroom 2': [177, 1118],
+      'SU Kitchen': [149, 1022],
+      'Exit': [874, 1084],
+      'Logic Lab': [782, 1106],
+      'NUMC Music Club': [786, 956],
+      'Physics Lab': [706, 940],
+      'Women Bathroom 2': [710, 1104],
+      'Elevators 2': [586, 1098]
     };
 
-    const floorOverlay = L.imageOverlay(floorConfig.imageUrl, floorConfig.bounds).addTo(map);
-    map.fitBounds(floorConfig.bounds);
-
-    const markers = [];
-    const markerIndex = {};
+    // NO MARKERS - clean map for your team to add search algorithm
+    // The rooms object is ready to be used by search functionality
 
     const searchInput = document.getElementById('search-input');
     const searchBtn = document.getElementById('search-btn');
 
-    function performSearch() {
-      const query = searchInput.value.trim().toLowerCase();
-      if (!query) return;
-
-      if (markerIndex[query]) {
-        const marker = markerIndex[query];
-        map.setView(marker.getLatLng(), 1, { animate: true });
-        marker.openPopup();
-        return;
+    // Search button placeholder - your team will add algorithm here
+    searchBtn.addEventListener('click', () => {
+      const query = searchInput.value.trim();
+      if (!query) {
+        alert('Please enter a room name to search.');
+      } else {
+        alert('Search algorithm will be implemented here.\n\nSearching for: ' + query);
+        // TODO: Add search logic here
+        // Example: if (rooms[query]) { map.setView(rooms[query], 2); }
       }
-
-      const matchedKey = Object.keys(markerIndex).find(key => key.includes(query));
-      if (matchedKey) {
-        const marker = markerIndex[matchedKey];
-        map.setView(marker.getLatLng(), 1, { animate: true });
-        marker.openPopup();
-      }
-    }
-
-    searchBtn.addEventListener('click', performSearch);
-    searchInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') performSearch();
     });
 
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        searchBtn.click();
+      }
+    });
+
+    // Control buttons
     document.getElementById('reset-btn').addEventListener('click', () => {
-      map.fitBounds(floorConfig.bounds);
+      map.fitBounds(bounds);
       map.closePopup();
       searchInput.value = '';
     });
@@ -324,13 +315,8 @@
       searchInput.value = '';
     });
 
-    document.getElementById('pin-btn').addEventListener('click', () => {
-      // Pin functionality placeholder
-    });
-
     document.getElementById('tarek-khalil-btn').addEventListener('click', () => {
-      map.fitBounds(floorConfig.bounds);
-      map.closePopup();
+      map.fitBounds(bounds);
     });
   </script>
 </body>
