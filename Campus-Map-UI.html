@@ -251,6 +251,19 @@
     .autocomplete-item:hover {
       background: #334155;
     }
+
+    .route-info {
+      background: #334155;
+      padding: 12px;
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-size: 13px;
+      display: none;
+    }
+
+    .route-info.active {
+      display: block;
+    }
   </style>
 </head>
 
@@ -290,6 +303,8 @@
           </div>
 
           <button class="search-btn" id="route-btn">🧭 Find Route</button>
+
+          <div class="route-info" id="route-info"></div>
         </div>
 
         <div class="control-buttons">
@@ -307,16 +322,238 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script>
-    // Initialize map only with image overlay
     const map = L.map('map', { crs: L.CRS.Simple, minZoom: -1, maxZoom: 3 });
-    const img_width = 1482;
-    const img_height = 1049;
+    const img_width = 1527;
+    const img_height = 1080;
     const bounds = [[0, 0], [img_height, img_width]];
     L.imageOverlay('floor-1.png', bounds).addTo(map);
     map.fitBounds(bounds);
 
-    // Autocomplete setup
-    const roomNames = ["Library","Men Bathroom","Room 1","IT Service Room","68B","Quick","Elevators","Women Bathroom","Room 7","Room 8","IT Service Room 2","Room 50","Room 51","Room 52A","Room 52B","Room 53","Stairs","SU","HUAC Lab","B43 Civil Lab","Men Bathroom 2","SU Kitchen","Exit","Logic Lab","NUMC Music Club","Physics Lab","Women Bathroom 2","Elevators 2"];
+    let currentPathPolyline = null;
+    let startMarker = null;
+    let endMarker = null;
+
+    // Complete node system: Rooms + Corridor Waypoints
+    const nodes = {
+      // Room nodes
+      "Library": { x: 590, y: 892 },
+      "Men Bathroom": { x: 468, y: 796 },
+      "Room 1": { x: 606, y: 806 },
+      "IT Service Room": { x: 466, y: 722 },
+      "68B": { x: 604, y: 728 },
+      "Quick": { x: 318, y: 532 },
+      "Elevators": { x: 464, y: 414 },
+      "Women Bathroom": { x: 460, y: 326 },
+      "Room 7": { x: 466, y: 258 },
+      "Room 8": { x: 464, y: 181 },
+      "IT Service Room 2": { x: 606, y: 177 },
+      "Room 50": { x: 612, y: 252 },
+      "Room 51": { x: 608, y: 332 },
+      "Room 52A": { x: 716, y: 450 },
+      "Room 52B": { x: 782, y: 450 },
+      "Room 53": { x: 852, y: 450 },
+      "Stairs": { x: 638, y: 612 },
+      "SU": { x: 702, y: 604 },
+      "HUAC Lab": { x: 774, y: 604 },
+      "B43 Civil Lab": { x: 852, y: 604 },
+      "Men Bathroom 2": { x: 1140, y: 488 },
+      "SU Kitchen": { x: 660, y: 684 },
+      "Exit": { x: 1122, y: 898 },
+      "Logic Lab": { x: 1142, y: 796 },
+      "NUMC Music Club": { x: 990, y: 804 },
+      "Physics Lab": { x: 993, y: 721 },
+      "Women Bathroom 2": { x: 1146, y: 542 },
+      "Elevators 2": { x: 1139, y: 601 },
+      
+      // Corridor waypoint nodes (50 waypoints for realistic pathfinding)
+      "W1": { x: 464, y: 181 }, "W2": { x: 464, y: 260 }, "W3": { x: 464, y: 326 },
+      "W4": { x: 464, y: 414 }, "W5": { x: 464, y: 450 }, "W6": { x: 464, y: 540 },
+      "W7": { x: 520, y: 450 }, "W8": { x: 590, y: 450 }, "W9": { x: 660, y: 450 },
+      "W10": { x: 716, y: 450 }, "W11": { x: 782, y: 450 }, "W12": { x: 852, y: 450 },
+      "W13": { x: 638, y: 450 }, "W14": { x: 638, y: 540 }, "W15": { x: 638, y: 612 },
+      "W16": { x: 638, y: 684 }, "W17": { x: 638, y: 760 }, "W18": { x: 606, y: 177 },
+      "W19": { x: 606, y: 252 }, "W20": { x: 606, y: 332 }, "W21": { x: 606, y: 450 },
+      "W22": { x: 606, y: 540 }, "W23": { x: 606, y: 612 }, "W24": { x: 606, y: 684 },
+      "W25": { x: 606, y: 722 }, "W26": { x: 606, y: 760 }, "W27": { x: 606, y: 806 },
+      "W28": { x: 606, y: 892 }, "W29": { x: 660, y: 604 }, "W30": { x: 702, y: 604 },
+      "W31": { x: 774, y: 604 }, "W32": { x: 852, y: 604 }, "W33": { x: 920, y: 604 },
+      "W34": { x: 990, y: 604 }, "W35": { x: 1060, y: 604 }, "W36": { x: 1139, y: 604 },
+      "W37": { x: 1140, y: 488 }, "W38": { x: 1146, y: 542 }, "W39": { x: 1146, y: 604 },
+      "W40": { x: 1146, y: 680 }, "W41": { x: 1146, y: 721 }, "W42": { x: 1146, y: 796 },
+      "W43": { x: 1146, y: 860 }, "W44": { x: 1146, y: 898 }, "W45": { x: 990, y: 721 },
+      "W46": { x: 990, y: 804 }, "W47": { x: 856, y: 540 }, "W48": { x: 318, y: 532 },
+      "W49": { x: 520, y: 540 }, "W50": { x: 468, y: 796 }
+    };
+
+    // Helper function to create straight line between two nodes
+    function makePath(from, to) {
+      return [[nodes[from].x, nodes[from].y], [nodes[to].x, nodes[to].y]];
+    }
+
+    // Complete edge system with corridor-following paths
+    const edges = [
+      // Room to waypoint connections
+      { from: "Room 8", to: "W1", points: makePath("Room 8", "W1") },
+      { from: "IT Service Room 2", to: "W18", points: makePath("IT Service Room 2", "W18") },
+      { from: "Room 7", to: "W2", points: makePath("Room 7", "W2") },
+      { from: "Room 50", to: "W19", points: makePath("Room 50", "W19") },
+      { from: "Women Bathroom", to: "W3", points: makePath("Women Bathroom", "W3") },
+      { from: "Room 51", to: "W20", points: makePath("Room 51", "W20") },
+      { from: "Elevators", to: "W4", points: makePath("Elevators", "W4") },
+      { from: "Quick", to: "W48", points: makePath("Quick", "W48") },
+      { from: "Room 52A", to: "W10", points: makePath("Room 52A", "W10") },
+      { from: "Room 52B", to: "W11", points: makePath("Room 52B", "W11") },
+      { from: "Room 53", to: "W12", points: makePath("Room 53", "W12") },
+      { from: "IT Service Room", to: "W25", points: makePath("IT Service Room", "W25") },
+      { from: "68B", to: "W24", points: makePath("68B", "W24") },
+      { from: "Men Bathroom", to: "W50", points: makePath("Men Bathroom", "W50") },
+      { from: "Room 1", to: "W27", points: makePath("Room 1", "W27") },
+      { from: "Library", to: "W28", points: makePath("Library", "W28") },
+      { from: "Stairs", to: "W15", points: makePath("Stairs", "W15") },
+      { from: "SU", to: "W30", points: makePath("SU", "W30") },
+      { from: "HUAC Lab", to: "W31", points: makePath("HUAC Lab", "W31") },
+      { from: "B43 Civil Lab", to: "W32", points: makePath("B43 Civil Lab", "W32") },
+      { from: "SU Kitchen", to: "W29", points: makePath("SU Kitchen", "W29") },
+      { from: "Men Bathroom 2", to: "W37", points: makePath("Men Bathroom 2", "W37") },
+      { from: "Women Bathroom 2", to: "W38", points: makePath("Women Bathroom 2", "W38") },
+      { from: "Elevators 2", to: "W36", points: makePath("Elevators 2", "W36") },
+      { from: "Physics Lab", to: "W45", points: makePath("Physics Lab", "W45") },
+      { from: "NUMC Music Club", to: "W46", points: makePath("NUMC Music Club", "W46") },
+      { from: "Logic Lab", to: "W42", points: makePath("Logic Lab", "W42") },
+      { from: "Exit", to: "W44", points: makePath("Exit", "W44") },
+      
+      // Corridor waypoint connections (creates the corridor network)
+      { from: "W1", to: "W2", points: makePath("W1", "W2") },
+      { from: "W2", to: "W3", points: makePath("W2", "W3") },
+      { from: "W3", to: "W4", points: makePath("W3", "W4") },
+      { from: "W4", to: "W5", points: makePath("W4", "W5") },
+      { from: "W5", to: "W6", points: makePath("W5", "W6") },
+      { from: "W5", to: "W7", points: makePath("W5", "W7") },
+      { from: "W7", to: "W8", points: makePath("W7", "W8") },
+      { from: "W8", to: "W13", points: makePath("W8", "W13") },
+      { from: "W13", to: "W9", points: makePath("W13", "W9") },
+      { from: "W9", to: "W10", points: makePath("W9", "W10") },
+      { from: "W10", to: "W11", points: makePath("W10", "W11") },
+      { from: "W11", to: "W12", points: makePath("W11", "W12") },
+      { from: "W13", to: "W14", points: makePath("W13", "W14") },
+      { from: "W14", to: "W15", points: makePath("W14", "W15") },
+      { from: "W15", to: "W16", points: makePath("W15", "W16") },
+      { from: "W16", to: "W17", points: makePath("W16", "W17") },
+      { from: "W18", to: "W19", points: makePath("W18", "W19") },
+      { from: "W19", to: "W20", points: makePath("W19", "W20") },
+      { from: "W20", to: "W21", points: makePath("W20", "W21") },
+      { from: "W21", to: "W22", points: makePath("W21", "W22") },
+      { from: "W22", to: "W23", points: makePath("W22", "W23") },
+      { from: "W23", to: "W24", points: makePath("W23", "W24") },
+      { from: "W24", to: "W25", points: makePath("W24", "W25") },
+      { from: "W25", to: "W26", points: makePath("W25", "W26") },
+      { from: "W26", to: "W27", points: makePath("W26", "W27") },
+      { from: "W27", to: "W28", points: makePath("W27", "W28") },
+      { from: "W16", to: "W29", points: makePath("W16", "W29") },
+      { from: "W29", to: "W30", points: makePath("W29", "W30") },
+      { from: "W30", to: "W31", points: makePath("W30", "W31") },
+      { from: "W31", to: "W32", points: makePath("W31", "W32") },
+      { from: "W32", to: "W33", points: makePath("W32", "W33") },
+      { from: "W33", to: "W34", points: makePath("W33", "W34") },
+      { from: "W34", to: "W35", points: makePath("W34", "W35") },
+      { from: "W35", to: "W36", points: makePath("W35", "W36") },
+      { from: "W36", to: "W39", points: makePath("W36", "W39") },
+      { from: "W37", to: "W36", points: makePath("W37", "W36") },
+      { from: "W38", to: "W39", points: makePath("W38", "W39") },
+      { from: "W39", to: "W40", points: makePath("W39", "W40") },
+      { from: "W40", to: "W41", points: makePath("W40", "W41") },
+      { from: "W41", to: "W42", points: makePath("W41", "W42") },
+      { from: "W42", to: "W43", points: makePath("W42", "W43") },
+      { from: "W43", to: "W44", points: makePath("W43", "W44") },
+      { from: "W6", to: "W49", points: makePath("W6", "W49") },
+      { from: "W49", to: "W14", points: makePath("W49", "W14") },
+      { from: "W14", to: "W47", points: makePath("W14", "W47") },
+      { from: "W47", to: "W32", points: makePath("W47", "W32") },
+      { from: "W21", to: "W13", points: makePath("W21", "W13") },
+      { from: "W22", to: "W14", points: makePath("W22", "W14") },
+      { from: "W23", to: "W15", points: makePath("W23", "W15") },
+      { from: "W24", to: "W16", points: makePath("W24", "W16") },
+      { from: "W26", to: "W17", points: makePath("W26", "W17") },
+      { from: "W48", to: "W49", points: makePath("W48", "W49") },
+      { from: "W50", to: "W26", points: makePath("W50", "W26") },
+      { from: "W41", to: "W45", points: makePath("W41", "W45") },
+      { from: "W45", to: "W34", points: makePath("W45", "W34") },
+      { from: "W46", to: "W42", points: makePath("W46", "W42") },
+      { from: "W46", to: "W34", points: makePath("W46", "W34") }
+    ];
+
+    // Build graph
+    const graph = {};
+    for (let node in nodes) {
+      graph[node] = [];
+    }
+
+    edges.forEach(edge => {
+      const distance = calculatePolylineLength(edge.points);
+      graph[edge.from].push({ node: edge.to, distance, points: edge.points });
+      graph[edge.to].push({ node: edge.from, distance, points: edge.points.slice().reverse() });
+    });
+
+    function calculatePolylineLength(points) {
+      let total = 0;
+      for (let i = 0; i < points.length - 1; i++) {
+        const dx = points[i + 1][0] - points[i][0];
+        const dy = points[i + 1][1] - points[i][1];
+        total += Math.sqrt(dx * dx + dy * dy);
+      }
+      return total;
+    }
+
+    function dijkstra(start, end) {
+      const distances = {};
+      const previous = {};
+      const pq = [];
+
+      for (let node in graph) {
+        distances[node] = Infinity;
+        previous[node] = null;
+      }
+
+      distances[start] = 0;
+      pq.push({ node: start, distance: 0 });
+
+      while (pq.length > 0) {
+        pq.sort((a, b) => a.distance - b.distance);
+        const { node: current } = pq.shift();
+
+        if (current === end) break;
+
+        for (let neighbor of graph[current]) {
+          const alt = distances[current] + neighbor.distance;
+          if (alt < distances[neighbor.node]) {
+            distances[neighbor.node] = alt;
+            previous[neighbor.node] = { node: current, points: neighbor.points };
+            pq.push({ node: neighbor.node, distance: alt });
+          }
+        }
+      }
+
+      const path = [];
+      let current = end;
+      while (previous[current]) {
+        path.unshift({ node: current, points: previous[current].points });
+        current = previous[current].node;
+      }
+      if (path.length > 0) path.unshift({ node: start, points: [] });
+
+      return { path, distance: distances[end] };
+    }
+
+    function getFullPolylinePoints(pathNodes) {
+      const fullPath = [];
+      for (let i = 0; i < pathNodes.length - 1; i++) {
+        const segment = pathNodes[i + 1].points;
+        fullPath.push(...segment);
+      }
+      return fullPath;
+    }
+
+    const roomNames = Object.keys(nodes).filter(name => !name.startsWith("W"));
 
     function setupAutocomplete(inputElement, boxElement) {
       inputElement.addEventListener("input", () => {
@@ -328,7 +565,7 @@
           return;
         }
 
-        const matches = roomNames.filter(r => r.toLowerCase().startsWith(query));
+        const matches = roomNames.filter(r => r.toLowerCase().includes(query));
 
         if (matches.length === 0) {
           boxElement.style.display = "none";
@@ -361,16 +598,87 @@
     setupAutocomplete(document.getElementById("start-input"), document.getElementById("start-box"));
     setupAutocomplete(document.getElementById("end-input"), document.getElementById("end-box"));
 
-    // Reset and clear buttons only reset map view and input fields
+    document.getElementById('route-btn').addEventListener('click', () => {
+      const startRoom = document.getElementById('start-input').value;
+      const endRoom = document.getElementById('end-input').value;
+      const routeInfo = document.getElementById('route-info');
+
+      if (currentPathPolyline) {
+        map.removeLayer(currentPathPolyline);
+        currentPathPolyline = null;
+      }
+      if (startMarker) map.removeLayer(startMarker);
+      if (endMarker) map.removeLayer(endMarker);
+
+      if (!nodes[startRoom] || !nodes[endRoom]) {
+        routeInfo.textContent = "❌ Invalid room selection";
+        routeInfo.classList.add('active');
+        return;
+      }
+
+      const { path, distance } = dijkstra(startRoom, endRoom);
+
+      if (path.length === 0 || distance === Infinity) {
+        routeInfo.textContent = "❌ No path found";
+        routeInfo.classList.add('active');
+        return;
+      }
+
+      const polylinePoints = getFullPolylinePoints(path);
+      const latLngPoints = polylinePoints.map(p => [p[1], p[0]]);
+
+      currentPathPolyline = L.polyline(latLngPoints, {
+        color: '#10b981',
+        weight: 4,
+        opacity: 0.8
+      }).addTo(map);
+
+      startMarker = L.circleMarker([nodes[startRoom].y, nodes[startRoom].x], {
+        color: '#3b82f6',
+        fillColor: '#3b82f6',
+        fillOpacity: 0.8,
+        radius: 8
+      }).addTo(map).bindPopup(`<b>Start:</b> ${startRoom}`);
+
+      endMarker = L.circleMarker([nodes[endRoom].y, nodes[endRoom].x], {
+        color: '#ef4444',
+        fillColor: '#ef4444',
+        fillOpacity: 0.8,
+        radius: 8
+      }).addTo(map).bindPopup(`<b>Destination:</b> ${endRoom}`);
+
+      map.fitBounds(currentPathPolyline.getBounds(), { padding: [50, 50] });
+
+      const distanceMeters = (distance * 0.3).toFixed(1);
+      routeInfo.textContent = `✅ Route found! Distance: ~${distanceMeters}m`;
+      routeInfo.classList.add('active');
+    });
+
     document.getElementById('reset-btn').addEventListener('click', () => {
       map.fitBounds(bounds);
       document.getElementById('start-input').value = '';
       document.getElementById('end-input').value = '';
+      document.getElementById('route-info').classList.remove('active');
+      
+      if (currentPathPolyline) {
+        map.removeLayer(currentPathPolyline);
+        currentPathPolyline = null;
+      }
+      if (startMarker) map.removeLayer(startMarker);
+      if (endMarker) map.removeLayer(endMarker);
     });
 
     document.getElementById('clear-btn').addEventListener('click', () => {
       document.getElementById('start-input').value = '';
       document.getElementById('end-input').value = '';
+      document.getElementById('route-info').classList.remove('active');
+      
+      if (currentPathPolyline) {
+        map.removeLayer(currentPathPolyline);
+        currentPathPolyline = null;
+      }
+      if (startMarker) map.removeLayer(startMarker);
+      if (endMarker) map.removeLayer(endMarker);
     });
 
     document.getElementById('tarek-khalil-btn').addEventListener('click', () => {
