@@ -132,5 +132,5 @@ This project is licensed under a **custom license**. Modifications or changes to
 
 ## 👨‍💻 Author
 
-Developed with ❤️ by **[Sa3id-jr](https://github.com/Sa3id-jr)**, **[Rodina Ahmed](https://github.com/Rodina-ahmed1)**, **[Nardy](https://github.com/nardy05)**, **[Tasneem Elsharkawy](https://github.com/tasneemelsharkawy)** in collaboration with Nile University.
+Developed by [Sa3id-jr](https://github.com/Sa3id-jr), [Rodina Ahmed](https://github.com/Rodina-ahmed1), [Nardy](https://github.com/nardy05), [Tasneem Elsharkawy](https://github.com/tasneemelsharkawy) in collaboration with Nile University.
 ---
