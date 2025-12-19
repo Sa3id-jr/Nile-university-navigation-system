@@ -109,10 +109,7 @@ Please ensure your browser supports Service Workers for offline functionality.
 
 ## 📈 Future Enhancements
 
-1. Support for newly added rooms and buildings.
-2. Multi-language support (e.g., Arabic, English).
-3. Real-time GPS/Bluetooth integration for live positioning.
-4. Mobile native apps for iOS and Android.
+Support for newly added rooms and buildings.
 
 ---
 
