@@ -1,0 +1,114 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - button "Toggle theme" [ref=e2] [cursor=pointer]:
+    - img [ref=e3]
+  - generic [ref=e9]: ⚠️ Offline Mode - Using cached data
+  - generic [ref=e10]:
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]: NU
+        - generic [ref=e14]:
+          - heading "Nile University" [level=1] [ref=e15]
+          - paragraph [ref=e16]: Multi-Floor Campus Navigator
+      - generic [ref=e19]: All systems operational
+      - generic [ref=e20]:
+        - button "🏢 Ground Floor 0" [ref=e21] [cursor=pointer]:
+          - generic [ref=e22]: 🏢
+          - generic [ref=e23]: Ground
+          - generic [ref=e24]: Floor 0
+        - button "⬆️ Upper Floor 1" [ref=e25] [cursor=pointer]:
+          - generic [ref=e26]: ⬆️
+          - generic [ref=e27]: Upper
+          - generic [ref=e28]: Floor 1
+      - generic [ref=e29]:
+        - generic [ref=e30]: 📍 Starting Point
+        - generic [ref=e31]:
+          - generic: 🚩
+          - textbox "Your current location" [ref=e32]
+        - generic [ref=e33]: 🎯 Destination
+        - generic [ref=e34]:
+          - generic: 📌
+          - textbox "Where do you want to go?" [ref=e35]
+        - button "🧭 Find Route & Directions" [ref=e36] [cursor=pointer]:
+          - generic [ref=e37]: 🧭
+          - generic [ref=e38]: Find Route & Directions
+        - generic [ref=e39]:
+          - button "↻ Reset" [ref=e40] [cursor=pointer]:
+            - generic [ref=e41]: ↻
+            - generic [ref=e42]: Reset
+          - button "✕ Clear" [ref=e43] [cursor=pointer]:
+            - generic [ref=e44]: ✕
+            - generic [ref=e45]: Clear
+      - generic [ref=e46]:
+        - text: Multi-Floor Campus Navigation • Offline Ready
+        - text: v3.1 with Complete Floor Routing
+    - generic [ref=e47]:
+      - generic:
+        - generic:
+          - button "📚" [ref=e48] [cursor=pointer]:
+            - generic [ref=e50]: 📚
+          - button "🚻" [ref=e52] [cursor=pointer]:
+            - generic [ref=e54]: 🚻
+          - button "🎓" [ref=e56] [cursor=pointer]:
+            - generic [ref=e58]: 🎓
+          - button "🔧" [ref=e60] [cursor=pointer]:
+            - generic [ref=e62]: 🔧
+          - button "🎓" [ref=e64] [cursor=pointer]:
+            - generic [ref=e66]: 🎓
+          - button "🍽️" [ref=e68] [cursor=pointer]:
+            - generic [ref=e70]: 🍽️
+          - button "🚪" [ref=e72] [cursor=pointer]:
+            - generic [ref=e74]: 🚪
+          - button "🚻" [ref=e76] [cursor=pointer]:
+            - generic [ref=e78]: 🚻
+          - button "🎓" [ref=e80] [cursor=pointer]:
+            - generic [ref=e82]: 🎓
+          - button "🎓" [ref=e84] [cursor=pointer]:
+            - generic [ref=e86]: 🎓
+          - button "🔧" [ref=e88] [cursor=pointer]:
+            - generic [ref=e90]: 🔧
+          - button "🎓" [ref=e92] [cursor=pointer]:
+            - generic [ref=e94]: 🎓
+          - button "🎓" [ref=e96] [cursor=pointer]:
+            - generic [ref=e98]: 🎓
+          - button "🎓" [ref=e100] [cursor=pointer]:
+            - generic [ref=e102]: 🎓
+          - button "🎓" [ref=e104] [cursor=pointer]:
+            - generic [ref=e106]: 🎓
+          - button "🎓" [ref=e108] [cursor=pointer]:
+            - generic [ref=e110]: 🎓
+          - button "🚪" [ref=e112] [cursor=pointer]:
+            - generic [ref=e114]: 🚪
+          - button "🏢" [ref=e116] [cursor=pointer]:
+            - generic [ref=e118]: 🏢
+          - button "🔬" [ref=e120] [cursor=pointer]:
+            - generic [ref=e122]: 🔬
+          - button "🔬" [ref=e124] [cursor=pointer]:
+            - generic [ref=e126]: 🔬
+          - button "🚻" [ref=e128] [cursor=pointer]:
+            - generic [ref=e130]: 🚻
+          - button "🍽️" [ref=e132] [cursor=pointer]:
+            - generic [ref=e134]: 🍽️
+          - button "🚪" [ref=e136] [cursor=pointer]:
+            - generic [ref=e138]: 🚪
+          - button "🔬" [ref=e140] [cursor=pointer]:
+            - generic [ref=e142]: 🔬
+          - button "🎵" [ref=e144] [cursor=pointer]:
+            - generic [ref=e146]: 🎵
+          - button "🔬" [ref=e148] [cursor=pointer]:
+            - generic [ref=e150]: 🔬
+          - button "🚻" [ref=e152] [cursor=pointer]:
+            - generic [ref=e154]: 🚻
+          - button "🚪" [ref=e156] [cursor=pointer]:
+            - generic [ref=e158]: 🚪
+      - generic:
+        - generic [ref=e160]:
+          - button "Zoom in" [ref=e161] [cursor=pointer]: +
+          - button "Zoom out" [disabled] [ref=e162]: −
+        - link "Leaflet" [ref=e164] [cursor=pointer]:
+          - /url: https://leafletjs.com
+          - img [ref=e165]
+          - text: Leaflet
+```
