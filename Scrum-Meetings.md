@@ -98,7 +98,7 @@ Develop a functional prototype of the First-Floor navigation to demonstrate path
 
 - **Date:** December 4, 2025
 - **Time**: 3:30 PM
-- **Duration**: 30 minutes
+- **Duration**: 20 minutes
 - **Attendees**: Eng.Ossama Adel - All team members
 - **Facilitator**: Kirillos Ramzy
 
@@ -142,9 +142,8 @@ Adding the second floor, Enhancing the UI of the system and making the map desig
 12. Creating test cases CI/CD — Assigned to Kirillos Ramzy
 13. Drawing a use case diagram — Assigned to Nardy Abdalla
 14. Drawing an activity diagram — Assigned to Nardy Abdalla
-15. Drawing a sequence diagram — Assigned to Tasneem Ahmed
-16. Drawing a Class diagram — Assigned to Rodina Ahmed
-17. Drawing a state diagram — Assigned to Rodina Ahmed
+15. Drawing a state diagram — Assigned to Tasneem Ahmed
+16. Drawing a sequence diagram — Assigned to Rodina Ahmed
 
 **Progress:** All backlog items assigned to team members
 
