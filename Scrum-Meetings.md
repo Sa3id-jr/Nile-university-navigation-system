@@ -63,7 +63,7 @@ Develop a functional prototype of the First-Floor navigation to demonstrate path
 
 - Phase One will be solely focused on First floor and limited design
 
-**Progress:** First Floor plan completed.
+**Progress:** All backlog items assigned to team members
 
 ### Daily Online Meetings
 
@@ -89,6 +89,24 @@ Develop a functional prototype of the First-Floor navigation to demonstrate path
 1. Validation of Sprint Backlog Completion
 2. Making a Readme file for phase one only
 3. Reviewing that the system is working 100% and testing it.
+
+**Progress:** First Floor plan completed.
+
+### Review Meeting (4-12-2025)
+
+**Meeting Details**
+
+- **Date:** December 4, 2025
+- **Time**: 3:30 PM
+- **Duration**: 30 minutes
+- **Attendees**: Eng.Ossama Adel - All team members
+- **Facilitator**: Kirillos Ramzy
+
+  1.Live demonstration of the working system.
+  
+  2.Explained logic behind Dijkstra & UI features.
+  
+  3.Verified milestones and individual contributions.
 
 ---
 
@@ -124,9 +142,11 @@ Adding the second floor, Enhancing the UI of the system and making the map desig
 12. Creating test cases CI/CD — Assigned to Kirillos Ramzy
 13. Drawing a use case diagram — Assigned to Nardy Abdalla
 14. Drawing an activity diagram — Assigned to Nardy Abdalla
-15. Drawing a sequence diagram — Assigned to Rodina Ahmed
+15. Drawing a sequence diagram — Assigned to Tasneem Ahmed
 16. Drawing a Class diagram — Assigned to Rodina Ahmed
 17. Drawing a state diagram — Assigned to Rodina Ahmed
+
+**Progress:** All backlog items assigned to team members
 
 ### Daily Online Meetings
 
@@ -155,6 +175,8 @@ Adding the second floor, Enhancing the UI of the system and making the map desig
 4. Checking all UML diagrams
 5. Writing a final documentation
 6. Making a comprehensive Readme file
+
+   **Progress:** Multi-floor plan completed.
 
 ---
 
