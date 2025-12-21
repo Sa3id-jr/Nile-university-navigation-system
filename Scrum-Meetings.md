@@ -103,10 +103,12 @@ Develop a functional prototype of the First-Floor navigation to demonstrate path
 - **Facilitator**: Kirillos Ramzy
 
   1.Live demonstration of the working system.
-  
+    
   2.Explained logic behind Dijkstra & UI features.
   
   3.Verified milestones and individual contributions.
+  
+**Progress:**  Received approval on the initial proposal from Eng.Ossama.
 
 ---
 
@@ -140,10 +142,11 @@ Adding the second floor, Enhancing the UI of the system and making the map desig
 10. Adding feature click when arrived halfway — Assigned to Tasneem Ahmed
 11. Error handling — Assigned to Tasneem Ahmed
 12. Creating test cases CI/CD — Assigned to Kirillos Ramzy
-13. Drawing a use case diagram — Assigned to Nardy Abdalla
-14. Drawing an activity diagram — Assigned to Nardy Abdalla
-15. Drawing a state diagram — Assigned to Tasneem Ahmed
-16. Drawing a sequence diagram — Assigned to Rodina Ahmed
+13. Drawing a Use-case diagram — Assigned to Nardy Abdalla
+14. Drawing an Activity diagram — Assigned to Nardy Abdalla
+15. Drawing a Class diagram — Assigned to Tasneem Ahmed
+16. Drawing a State diagram — Assigned to Rodina Ahmed
+17. Drawing a Sequence diagram — Assigned to Rodina Ahmed
 
 **Progress:** All backlog items assigned to team members
 
